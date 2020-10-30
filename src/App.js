@@ -1,18 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import Gallery from "react-photo-gallery";
-import Carousel, { Modal, ModalGateway } from "react-images";
+import Gallery from 'react-photo-gallery';
+import Carousel, { Modal, ModalGateway } from 'react-images';
+import $ from 'jquery';
 import './App.css';
 
-// NOTE: make sure to add your unsplash api key
-// https://unsplash.com/developers
-// copy .env.example to .env
 const accessKey = process.env.REACT_APP_UNSPLASH_ACCESS_KEY;
 
 export default function App() {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState('nature');
   const [currentImage, setCurrentImage] = useState(0);
   const [viewerIsOpen, setViewerIsOpen] = useState(false);
 
@@ -26,48 +24,64 @@ export default function App() {
     setViewerIsOpen(false);
   };
 
-  useEffect(() => {
-    getPhotos();
-    // eslint-disable-next-line
-  }, [page]);
-
   function getPhotos() {
-    let apiUrl = `https://api.unsplash.com/photos?`;
-    if (query) apiUrl = `https://api.unsplash.com/search/photos?query=${query}`;
-    apiUrl += `&page=${page}`;
-    apiUrl += `&client_id=${accessKey}`;
-
-    fetch(apiUrl)
+    return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&client_id=${accessKey}`)
       .then((res) => res.json())
-      .then((data) => {
-        const imagesFromApi = data.results ?? data;
-        const imagesWithSrc = imagesFromApi.map(image=>({class: "image", width: image.width, height: image.height, src: image.urls.regular, title: image.user.name}))
-        // if page is 1, then we need a whole new array of images
-        if (page === 1) {
-          setImages(imagesWithSrc);
-          return;
-        }
-
-        // if page > 1, then we are adding for our infinite scroll
-        setImages((images) => [...images, ...imagesWithSrc]);
+      .then(({ results }) => {
+        const newImages = results.map((image) => ({
+          ...image,
+          className: 'image',
+          id: image.id,
+          width: image.width,
+          height: image.height,
+          src: image.urls.regular,
+          title: image.user.name,
+        }));
+        return newImages;
       });
   }
-
-  function searchPhotos(e) {
-    e.preventDefault();
-    setPage(1);
-    getPhotos();
+  function nextPage(){
+    setPage((page) => page + 1)
   }
 
+  function updatePhotos() {
+    getPhotos().then((newImages) => {
+      if (images.length) {
+        setImages((images) => {
+          const updatedImages = [
+            ...[...images, ...newImages].filter(
+              (image, i, arr) => i == arr.findIndex((el) => el.id == image.id)
+            ),
+          ];
+          if (images.length == updatedImages.length) nextPage();
+          return updatedImages;
+        });
+      } else {
+        setImages(newImages);
+      }
+      if(page == 1)nextPage();
+    });
+  }
+
+  useEffect(() => {
+    updatePhotos();
+  }, [page]);
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    setPage(1);
+    setImages([]);
+    updatePhotos();
+  }
 
   return (
-    <div className="app">
+    <div className='app'>
       <h1>Unsplash Image Gallery!</h1>
 
-      <form onSubmit={searchPhotos}>
+      <form onSubmit={handleSearchSubmit}>
         <input
-          type="text"
-          placeholder="Search Unsplash..."
+          type='text'
+          placeholder='Search Unsplash...'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -76,28 +90,25 @@ export default function App() {
 
       <InfiniteScroll
         dataLength={images.length}
-        next={() => setPage((page) => page + 1)}
+        next={nextPage}
         hasMore={true}
         loader={<h4>Loading...</h4>}
       >
-        <Gallery photos={images} margin={15} onClick={openLightbox} />
-      <ModalGateway>
-        {viewerIsOpen ? (
-          <Modal onClose={closeLightbox}>
-            <Carousel
-              currentIndex={currentImage}
-              views={images.map(x => ({
-                ...x,
-                srcset: x.srcSet,
-                caption: x.title
-              }))}
-            />
-          </Modal>
-        ) : null}
-      </ModalGateway>
-        
-          
-       
+        {images.length &&<Gallery photos={images} direction={"column"} margin={15} onClick={openLightbox} />}
+        <ModalGateway>
+          {viewerIsOpen ? (
+            <Modal onClose={closeLightbox}>
+              <Carousel
+                currentIndex={currentImage}
+                views={images.map((x) => ({
+                  ...x,
+                  srcset: x.srcSet,
+                  caption: x.title,
+                }))}
+              />
+            </Modal>
+          ) : null}
+        </ModalGateway>
       </InfiniteScroll>
     </div>
   );
