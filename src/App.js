@@ -23,7 +23,7 @@ export default function App() {
     setCurrentImage(0);
     setViewerIsOpen(false);
   };
-
+  // &per_page=${page == (1 || 2) ? 10 :50}
   function getPhotos() {
     return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&client_id=${accessKey}`)
       .then((res) => res.json())
@@ -76,7 +76,7 @@ export default function App() {
 
   return (
     <div className='app'>
-      <h1>Unsplash Image Gallery!</h1>
+      <h1>Ансплэш</h1>
 
       <form onSubmit={handleSearchSubmit}>
         <input
@@ -92,9 +92,10 @@ export default function App() {
         dataLength={images.length}
         next={nextPage}
         hasMore={true}
-        loader={<h4>Loading...</h4>}
+        loader={<button onClick={nextPage}>Ещё...</button>}
+        className="infinite-scroll"
       >
-        {images.length &&<Gallery photos={images} direction={"column"} margin={15} onClick={openLightbox} />}
+        {images.length ? <Gallery  photos={images} direction={"column"} margin={15} onClick={openLightbox} /> : null}
         <ModalGateway>
           {viewerIsOpen ? (
             <Modal onClose={closeLightbox}>
