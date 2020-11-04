@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Gallery from 'react-photo-gallery';
 import Carousel, { Modal, ModalGateway } from 'react-images';
-import $ from 'jquery';
+import Particles from 'react-particles-js';
+import particlesConfig from './configParticles';
 import './App.css';
 
 const accessKey = process.env.REACT_APP_UNSPLASH_ACCESS_KEY;
@@ -25,11 +26,11 @@ export default function App() {
   };
   // &per_page=${page == (1 || 2) ? 10 :50}
   function getPhotos() {
-    return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&client_id=${accessKey}`)
+    return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&per_page=30&client_id=${accessKey}`)
       .then((res) => res.json())
       .then(({ results }) => {
         const newImages = results.map((image) => ({
-          ...image,
+          
           className: 'image',
           id: image.id,
           width: image.width,
@@ -53,13 +54,13 @@ export default function App() {
               (image, i, arr) => i == arr.findIndex((el) => el.id == image.id)
             ),
           ];
-          if (images.length == updatedImages.length) nextPage();
+          if (images.length == updatedImages.length && (updatedImages.length - images.length > 0)) nextPage();
           return updatedImages;
         });
       } else {
         setImages(newImages);
       }
-      if(page == 1)nextPage();
+      // if(page == 1)nextPage();
     });
   }
 
@@ -76,6 +77,9 @@ export default function App() {
 
   return (
     <div className='app'>
+      <div className='particles-container'>
+        <Particles height="100vh" width="100vw" params={particlesConfig} />
+      </div>
       <h1>Ансплэш</h1>
 
       <form onSubmit={handleSearchSubmit}>
