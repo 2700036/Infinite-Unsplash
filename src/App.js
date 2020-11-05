@@ -5,6 +5,7 @@ import Carousel, { Modal, ModalGateway } from 'react-images';
 import Particles from 'react-particles-js';
 import particlesConfig from './configParticles';
 import './App.css';
+import Popup from './Popup';
 
 const accessKey = process.env.REACT_APP_UNSPLASH_ACCESS_KEY;
 
@@ -14,6 +15,7 @@ export default function App() {
   const [query, setQuery] = useState('nature');
   const [currentImage, setCurrentImage] = useState(0);
   const [viewerIsOpen, setViewerIsOpen] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
 
   const openLightbox = useCallback((event, { photo, index }) => {
     setCurrentImage(index);
@@ -29,6 +31,9 @@ export default function App() {
     return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&per_page=30&client_id=${accessKey}`)
       .then((res) => res.json())
       .then(({ results }) => {
+        if(!results.length) {
+          return Promise.reject({message: 'Ничего не найдено'})
+      }
         const newImages = results.map((image) => ({
           
           className: 'image',
@@ -61,7 +66,8 @@ export default function App() {
         setImages(newImages);
       }
       // if(page == 1)nextPage();
-    });
+    })
+    .catch(err=> setIsPopupOpen(true) );
   }
 
   useEffect(() => {
@@ -77,17 +83,19 @@ export default function App() {
 
   return (
     <div className='app'>
+      < Popup open={isPopupOpen} handleClose={()=>setIsPopupOpen(false)} />
       <div className='particles-container'>
         <Particles height="100vh" width="100vw" params={particlesConfig} />
       </div>
-      <h1>Ансплэш</h1>
+      <h1>Infinite Unsplash Gallery</h1>
 
       <form onSubmit={handleSearchSubmit}>
         <input
           type='text'
-          placeholder='Search Unsplash...'
+          placeholder='on english please...'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          required
         />
         <button>Search</button>
       </form>
