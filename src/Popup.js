@@ -1,21 +1,25 @@
 import React from 'react';
-import Modal from '@material-ui/core/Modal';
+import Typography from '@material-ui/core/Typography';
+import DialogContent from '@material-ui/core/DialogContent';
+import Dialog from '@material-ui/core/Dialog';
+import { makeStyles } from '@material-ui/core';
+const useStyles = makeStyles({
+  dialog: {
+    
+padding: 20
+}
+});
+
 
 export default function Popup ({open, handleClose}){
+  const classes = useStyles()
     return (
-        <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="simple-modal-title"
-        aria-describedby="simple-modal-description"
-      >
-        {<>
-            <h2 id="simple-modal-title">Text in a modal</h2>
-      <p id="simple-modal-description">
-        Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-      </p>
-      </>
-      }
-      </Modal>
+      <Dialog onClose={handleClose}  aria-labelledby="simple-dialog-title" maxWidth='xs' open={open} >      
+      <DialogContent className={classes.dialog}>
+      <Typography  >
+      {open.message}
+      </Typography>        
+      </DialogContent>
+  </Dialog>
     )
 }

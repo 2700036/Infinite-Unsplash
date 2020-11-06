@@ -28,10 +28,13 @@ export default function App() {
   };
   // &per_page=${page == (1 || 2) ? 10 :50}
   function getPhotos() {
+    if(!query.match(/[a-zA-Z ]+$/gi)){
+      return Promise.reject({message: 'Unsplash supports all languages, but most of the results are given if you search in English.'});      
+    }
     return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&per_page=30&client_id=${accessKey}`)
       .then((res) => res.json())
       .then(({ results }) => {
-        if(!results.length) {
+        if(!results.length && page < 2) {
           return Promise.reject({message: 'Ничего не найдено'})
       }
         const newImages = results.map((image) => ({
@@ -59,7 +62,13 @@ export default function App() {
               (image, i, arr) => i == arr.findIndex((el) => el.id == image.id)
             ),
           ];
-          if (images.length == updatedImages.length && (updatedImages.length - images.length > 0)) nextPage();
+          if (images.length == updatedImages.length && (updatedImages.length - images.length > 0)) nextPage(); 
+          // {
+          //   if(updatedImages.length - images.length > 0){
+          //     nextPage()} else {
+          //       setIsPopupOpen({message: 'Похоже что мы всё нашли'})
+          //     }
+          // };
           return updatedImages;
         });
       } else {
@@ -67,7 +76,7 @@ export default function App() {
       }
       // if(page == 1)nextPage();
     })
-    .catch(err=> setIsPopupOpen(true) );
+    .catch(err=> setIsPopupOpen(err) );
   }
 
   useEffect(() => {
@@ -104,7 +113,7 @@ export default function App() {
         dataLength={images.length}
         next={nextPage}
         hasMore={true}
-        loader={<button onClick={nextPage}>Ещё...</button>}
+        loader={<p>Looks like that's all...</p>}
         className="infinite-scroll"
       >
         {images.length ? <Gallery  photos={images} direction={"column"} margin={15} onClick={openLightbox} /> : null}
