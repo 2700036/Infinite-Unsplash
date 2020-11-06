@@ -29,7 +29,7 @@ export default function App() {
   // &per_page=${page == (1 || 2) ? 10 :50}
   function getPhotos() {
     if(!query.match(/[a-zA-Z ]+$/gi)){
-      return Promise.reject({message: 'Unsplash supports all languages, but most of the results are given if you search in English.'});      
+      return Promise.reject({message: 'Unsplash поддерживает множество языков, но больше всего результатов будет найдено если искать на английском.'});      
     }
     return fetch(`https://api.unsplash.com/search/photos?query=${query}&page=${page}&per_page=30&client_id=${accessKey}`)
       .then((res) => res.json())
